@@ -33,12 +33,14 @@ export class LpaBoundariesDatabaseClient {
 			select: { lpaName: true, geometry: true }
 		});
 
-		const parsedLpas = allLpas.map((lpa) => {
-			return {
-				...lpa,
-				geometry: parseGeometry(lpa.geometry)
-			};
-		});
+		const parsedLpas = allLpas
+			.map((lpa) => {
+				return {
+					...lpa,
+					geometry: parseGeometry(lpa.geometry)
+				};
+			})
+			.filter((lpa) => lpa.geometry !== null);
 
 		this.#cache?.set(CACHE_KEY, parsedLpas);
 		return parsedLpas;
