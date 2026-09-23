@@ -3,6 +3,7 @@ import { calendarEventTimings } from './data-static-calendar-event-timings.ts';
 import { normalizeString } from '@pins/inspector-programming-lib/util/normalize.js';
 import { INSPECTOR_TO_CASE_SPECIALISM_MAP } from './specialism-mapping.js';
 import { LpaBoundariesClient } from './lpa-boundaries/lpa-boundaries-client.ts';
+import { sleep } from '@planning-inspectorate/core';
 
 /**
  * @param {import('@pins/inspector-programming-database/src/client/client.ts').PrismaClient} dbClient
@@ -121,6 +122,7 @@ async function seedLpaGeometries(dbClient) {
 	console.log('  fetching LPAs from the DB');
 	const lpas = await dbClient.lpa.findMany({
 		select: {
+			lpaName: true,
 			lpaCode: true,
 			onsCode: true
 		}
@@ -129,15 +131,14 @@ async function seedLpaGeometries(dbClient) {
 	let count = 0;
 	for (const lpa of lpas) {
 		if (lpa.onsCode) {
-			const geometry = geometryByOnsCode.get(lpa.onsCode);
-			if (geometry) {
-				count++;
-				await dbClient.lpa.update({
-					where: { lpaCode: lpa.lpaCode },
-					data: {
-						geometry: JSON.stringify(geometry)
-					}
-				});
+			// some LPAs have multiple codes associated, find hte first geometry match
+			const codes = lpa.onsCode.split(';').map((code) => code.trim());
+			for (const code of codes) {
+				const found = await addLpaGeometry(dbClient, client, { ...lpa, onsCode: code }, geometryByOnsCode);
+				if (found) {
+					count++;
+					break;
+				}
 			}
 		}
 	}
@@ -161,4 +162,45 @@ export async function seedInspectorCaseSpecialismMapping(dbClient) {
 		});
 	}
 	console.log('seeding', Object.keys(INSPECTOR_TO_CASE_SPECIALISM_MAP).length, 'inspector-case specialism mappings');
+}
+
+/**
+ * @typedef {Object} Lpa
+ * @property {string} lpaName
+ * @property {string} lpaCode
+ * @property {string} onsCode
+ */
+
+/**
+ * Add geometry to an LPA in the database, either from the provided map or by fetching from the boundary client.
+ * @param {import('@pins/inspector-programming-database/src/client/client.ts').PrismaClient} dbClient
+ * @param {LpaBoundariesClient} boundaryClient
+ * @param {Lpa} lpa
+ * @param {Map<string, any>} geometryByOnsCode
+ */
+
+async function addLpaGeometry(dbClient, boundaryClient, lpa, geometryByOnsCode) {
+	const geometry = geometryByOnsCode.get(lpa.onsCode);
+	if (geometry) {
+		await dbClient.lpa.update({
+			where: { lpaCode: lpa.lpaCode },
+			data: {
+				geometry: JSON.stringify(geometry)
+			}
+		});
+		return true;
+	} else {
+		await sleep(250); // crude rate limiting
+		const res = await boundaryClient.getCountyBoundary(lpa.onsCode);
+		if (res !== null) {
+			console.log('  got geometry for', lpa.lpaName, 'in counties');
+			await dbClient.lpa.update({
+				where: { lpaCode: lpa.lpaCode },
+				data: {
+					geometry: JSON.stringify(res)
+				}
+			});
+			return true;
+		}
+	}
 }
