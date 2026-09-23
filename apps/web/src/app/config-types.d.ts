@@ -1,6 +1,7 @@
 import type { BaseConfig } from '@planning-inspectorate/core/app';
 import type { NotifyConfig } from '@pins/inspector-programming-lib/emails/types';
 import type { ManageAppealsApiOptions } from '@pins/inspector-programming-lib/data/cbos/types';
+import type { LpaBoundariesApiOptions } from '@pins/inspector-programming-lib/data/lpa/types';
 
 interface Config extends BaseConfig {
 	api: {
@@ -30,6 +31,7 @@ interface Config extends BaseConfig {
 		inspectorsCacheTtl: number;
 	};
 	cbos: ManageAppealsApiOptions;
+	lpaBoundaries?: LpaBoundariesApiOptions;
 	entra: {
 		// group cache ttl in minutes
 		cacheTtl: number;
