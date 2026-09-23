@@ -373,6 +373,7 @@ function initialiseMap(apiKey, cbosUrl, pins, inspector, lpas) {
 		// Build esri Polygon graphics directly (rather than a GeoJSONLayer) so we don't
 		// disturb the OS vector basemap's spatial reference / rendering. A FeatureLayer is
 		// used (not a GraphicsLayer) because only FeatureLayers support automatic labelling.
+		let boundariesLayer;
 		function addLpaBoundaries(lpas) {
 			if (!lpas || !Array.isArray(lpas) || lpas.length === 0) {
 				return;
@@ -412,8 +413,9 @@ function initialiseMap(apiKey, cbosUrl, pins, inspector, lpas) {
 				return;
 			}
 
-			const boundariesLayer = new FeatureLayer({
+			boundariesLayer = new FeatureLayer({
 				title: 'LPA boundaries',
+				visible: false,
 				source: boundaryGraphics,
 				objectIdField: 'objectId',
 				geometryType: 'polygon',
@@ -441,6 +443,15 @@ function initialiseMap(apiKey, cbosUrl, pins, inspector, lpas) {
 		}
 
 		addLpaBoundaries(lpas);
+
+		const showLpaBoundariesToggle = document.getElementById('show-lpa-boundaries');
+		if (showLpaBoundariesToggle) {
+			showLpaBoundariesToggle.addEventListener('change', function () {
+				if (boundariesLayer) {
+					boundariesLayer.visible = showLpaBoundariesToggle.checked;
+				}
+			});
+		}
 
 		reactiveUtils.watch(
 			() => view.popup.selectedFeature,

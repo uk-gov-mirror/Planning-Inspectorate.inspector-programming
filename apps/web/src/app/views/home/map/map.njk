@@ -26,19 +26,37 @@
             width: 100%;
             height: 100%;
         }
+
+        .pins-map__controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
     </style>
+    <div class="pins-map__controls govuk-!-margin-bottom-2">
     {% if showSelectedFilter %}
-    <div class="govuk-form-group govuk-!-margin-bottom-2">
+        <div class="govuk-form-group">
+            <div class="govuk-checkboxes govuk-checkboxes--small" data-module="govuk-checkboxes">
+                <div class="govuk-checkboxes__item">
+                    <input class="govuk-checkboxes__input" id="show-selected-cases-only" type="checkbox">
+                    <label class="govuk-label govuk-checkboxes__label" for="show-selected-cases-only">
+                        Show selected cases only
+                    </label>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    <div class="govuk-form-group">
         <div class="govuk-checkboxes govuk-checkboxes--small" data-module="govuk-checkboxes">
             <div class="govuk-checkboxes__item">
-                <input class="govuk-checkboxes__input" id="show-selected-cases-only" type="checkbox">
-                <label class="govuk-label govuk-checkboxes__label" for="show-selected-cases-only">
-                    Show selected cases only
+                <input class="govuk-checkboxes__input" id="show-lpa-boundaries" type="checkbox">
+                <label class="govuk-label govuk-checkboxes__label" for="show-lpa-boundaries">
+                    Show LPA boundaries
                 </label>
             </div>
         </div>
+        </div>
     </div>
-    {% endif %}
     <div class="pins-map">
         <div class="pins-map__container">
             <div id="map" class="pins-map__content"></div>
