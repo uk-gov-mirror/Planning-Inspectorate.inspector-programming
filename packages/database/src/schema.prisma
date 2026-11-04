@@ -79,8 +79,23 @@ model AppealCase {
 
   eventType String? // This field isn’t part of the appeals data model — it comes from appeal‑event.
 
+  AppealEventEstimate AppealEventEstimate? // relation to the appeal-event-estimate data model
+
   // cases are filtered base on these criteria, to match calendar timing rules
   @@index([caseType, caseProcedure, allocationLevel])
+}
+
+/// an appeal event estimate, a case has only one event estimate
+/// see https://github.com/Planning-Inspectorate/data-model/blob/main/schemas/appeal-event-estimate.schema.json
+model AppealEventEstimate {
+  id            Int    @id
+  caseReference String @unique
+
+  preparationTime Float?
+  sittingTime     Float?
+  reportingTime   Float?
+
+  AppealCase AppealCase @relation(fields: [caseReference], references: [caseReference], onDelete: Cascade)
 }
 
 model AppealCaseSpecialism {
